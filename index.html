@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Todo app</title>
+    <script src="https://unpkg.com/vue"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://kit.fontawesome.com/51b82569f7.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300&display=swap" rel="stylesheet">
+        <style>
+      [v-cloak] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="todoapp">
+      <header class="header">
+        <h1>Todo List</h1>
+        <div class="categoryChoice">
+            <p>Choose A Category</p>
+            <ul>
+                <li>
+                    <input
+                    v-model="categoryChoice"
+                    type="radio"
+                    value="work"
+                    name="radio"
+                    id="work"
+                    />
+                    <label for="fruits">Work</label>
+                </li>
+                <li>
+                    <input
+                    v-model="categoryChoice"
+                    type="radio"
+                    value="idea"
+                    name="radio"
+                    id="idea"
+                    />
+                    <label for="idea">Idea</label>
+                </li>
+                <li>
+                    <input
+                    v-model="categoryChoice"
+                    type="radio"
+                    value="payment"
+                    name="radio"
+                    id="payment"
+                    />
+                    <label for="payment">Payment</label>
+                </li>
+            </ul>
+        </div>
+        
+
+        <input
+          class="new-todo"
+          autofocus
+          autocomplete="off"
+          placeholder="What needs to be done?"
+          v-model="newTodo"
+          @keyup.enter="addTodo"
+        />
+
+        
+      </header>
+      <section class="main" v-show="todos.length" v-cloak>
+            <table class="tableCenter">
+                <thead v-pre class="tableHead">
+                    <tr>
+                        <th></th>
+                        <th>Task</th>
+                        <th>Edit</th>
+                        <th>Category</th>
+                        <th></th>
+                    </tr>
+                </thead>   
+                <tbody class="tableBody">
+                    <tr
+                        v-for="(todo, index) in filteredTodos"
+                        class="todo"
+                    >
+                    <td class="toggle"><input type="checkbox" v-model="todo.completed" /></td>
+                        <td class="task" :style="[!todo.completed ? '' : { 'text-decoration': 'line-through'}]">{{ todo.title }}</td>
+                        <td class="task">
+                            <input
+                                class="edit"
+                                type="text"
+                                v-model="todo.title"
+                                @click="editTodo(index, todo)"
+                                @blur="updateTodo(index, todo)"
+                                @keyup.enter="updateTodo(index, todo)"
+                                @keyup.esc="cancelEdit(todo)"
+                            />
+                        </td>
+                        <td class="category">{{todo.category}}</td>
+                        <td class="button">
+                            <button class="destroy" @click="removeTodo(todo)" style="border:none; background-color:#FFFF">
+                                <i class="far fa-trash-alt fa-2x" style="color:#F32013"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>     
+            </table>
+          </div>
+        
+      </section>
+      <footer class="footer" v-if="todos.length" v-cloak>
+
+        <ul class="filters">
+          <li>
+            <button  
+                @click="showAll"
+                class="all-btn"
+                >All</button>
+          </li>
+          <li>
+            <button
+                href="#"  
+                @click="showActive"
+                class="active-btn"
+              >Active</button
+            >
+          </li>
+          <li>
+            <button
+                href="#"  
+                @click="showCompleted"
+                class="completed-btn"
+              >Completed</button
+            >
+          </li>
+          <li>
+            <button
+                class="clear-completed"
+                @click="removeCompleted"
+                v-if="todos.length > remaining"
+                >
+                Clear completed
+            </button>
+          </li>
+        </ul>
+        <div class="categoryFilter">
+            <p>Filter by Category:</p>
+            <ul>
+                <li>
+                    <input
+                    v-model="categoryFilter"
+                    type="radio"
+                    value="work"
+                    name="radio"
+                    id="work"
+                    />
+                    <label for="fruits">Work</label>
+                </li>
+                <li>
+                    <input
+                    v-model="categoryFilter"
+                    type="radio"
+                    value="idea"
+                    name="radio"
+                    id="idea"
+                    />
+                    <label for="idea">Idea</label>
+                </li>
+                <li>
+                    <input
+                    v-model="categoryFilter"
+                    type="radio"
+                    value="payment"
+                    name="radio"
+                    id="payment"
+                    />
+                    <label for="payment">Payment</label>
+                </li>
+                <li>
+                    <button
+                        class="clear-filter"
+                        @click="clearFilter"
+                        >
+                        Clear Filter
+                    </button>
+                </li>
+                </ul>
+        </div>
+        
+      </footer>
+    </section>
+
+    <script>
+
+      // localStorage persistence
+      var STORAGE_KEY = "todos-vuejs-2.0";
+      var todoStorage = {
+        getData: function () {
+          var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          todos.forEach(function (todo, index) {
+            todo.id = index;
+          });
+          todoStorage.uid = todos.length;
+          return todos;
+        },
+        saveData: function (todos) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+      };
+
+      // visibility filters
+      var filters = {
+        all: function (todos) {
+            if(app.$data.categoryFilter){
+                return todos.filter(function (todo) {
+                    return (
+                        todo.category === app.$data.categoryFilter
+                    );
+                })
+            }else{
+                return todos;
+            }
+            
+        },
+        active: function (todos) {
+          return todos.filter(function (todo) {
+            if(app.$data.categoryFilter){
+                return (
+                    !todo.completed && (todo.category === app.$data.categoryFilter)
+                )
+            }else{
+                return  !todo.completed;
+            }
+            
+          });
+        },
+        completed: function (todos) {
+            app.$data.completed = !app.$data.completed
+            console.log(app.$data.completed)
+            return todos.filter(function (todo) {
+                if(app.$data.categoryFilter){
+                    return todo.completed && (todo.category === app.$data.categoryFilter)
+                }else{
+                    return todo.completed
+                }
+            });
+        }
+      };
+
+      // app Vue instance
+      var app = new Vue({
+        data: {
+          todos: todoStorage.getData(),
+          categoryChoice: "", //hold redio input
+          categoryFilter: "",
+          newTodo: "",
+          editedTodo: null,
+          beforeEdit: "",  
+          visibility: "all",
+          selectedIndex: "",
+          isEditing :false,
+          num:0,
+        },
+
+        // watch todos change for localStorage persistence
+        watch: {
+          todos: {
+            handler: function (todos) {
+              todoStorage.saveData(todos);
+            }
+            ,
+            deep: true
+          }
+        },
+
+
+        computed: {
+          filteredTodos: function () {
+            return filters[this.visibility](this.todos);
+          },
+          remaining: function () {
+            return filters.active(this.todos).length;
+          },
+          allDone: {
+            get: function () {
+              return this.remaining === 0;
+            },
+            set: function (value) {
+              this.todos.forEach(function (todo) {
+                todo.completed = value;
+              });
+            }
+          }
+        },
+
+
+        methods: {
+            addTodo: function () {
+                var value = this.newTodo && this.newTodo.trim();
+                value = value.charAt(0).toLowerCase() + value.slice(1);
+                if (!value) {
+                return;
+                }
+                this.todos.push({
+                id: todoStorage.uid++,
+                title: value,
+                completed: false,
+                category: this.categoryChoice //set category
+                });
+                this.newTodo = "";
+            },
+
+            removeTodo: function (todo) {
+                this.todos = this.todos.filter((item) => {
+                    return  item.id != todo.id
+                })
+            },
+
+            editTodo: function (index, todo) {
+                this.todo = todo;
+                this.selectedIndex = index
+                this.isEditing = true
+            },
+
+            updateTodo: function (index, todo) {
+                this.todos.splice(this.selectedIndex, 1, this.todo)
+            },
+
+            removeCompleted: function () {
+                this.todos = filters.active(this.todos);
+            },
+
+            clearFilter: function() {
+                for (const element of document.getElementsByName('radio')) {
+                    this.categoryFilter = ""
+                    element.checked = false;
+                }
+                },
+
+            showAll: function(){
+                this.visibility = "all";
+            },
+
+            showActive: function(){
+                this.visibility = "active";
+            },
+
+            showCompleted: function(){
+                this.visibility = "completed";
+            }
+
+
+        },
+
+        directives: {
+          "todo-focus": function (el, binding) {
+            if (binding.value) {
+              el.focus();
+            }
+          }
+        }
+      });
+
+      // mount
+      app.$mount(".todoapp");
+    </script>
+  </body>
+</html>
