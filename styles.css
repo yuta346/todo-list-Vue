@@ -9,7 +9,7 @@ body{
     border-radius: 25px;
     padding: 15px 15px;
     margin: 100px auto;
-    width:50%;
+    width:60%;
     display: block;
     overflow: auto;
     box-shadow: 0 2px 5px #ccc;
@@ -101,7 +101,7 @@ table, th{
 }
 
 table{
-    width:80%;
+    width:90%;
 }
 
 .todo{
@@ -126,6 +126,11 @@ table{
     width:100px;
 }
 
+.date{
+    border: 1px solid black;
+    width:160px;
+}
+
 .toggle{
     width:6%;
     border: 1px solid black;
@@ -143,7 +148,7 @@ table{
     border:none;
 }
 
-.button{
+.trash-button{
     width:6%;
     border: 1px solid black;
     border-collapse: collapse;
@@ -184,8 +189,11 @@ table{
     height:30px;
     background-color: #24a0ed;
     border:none;
-    border-radius: 5px;
-   
+    border-radius: 5px;  
+}
+
+.all-btn:active{
+    background-color: #A7D9F7;
 }
 
 .active-btn{
@@ -199,6 +207,10 @@ table{
     font-size:0.9rem;
 }
 
+.active-btn:active{
+    background-color:#98efb6;
+}
+
 .completed-btn{
     color:#FFFF;
     font-weight: bold;
@@ -208,6 +220,10 @@ table{
     border:none;
     border-radius: 5px;
     font-size:0.9rem;
+}
+
+.completed-btn:active{
+    background-color:#f98a83;
 }
 
 .clear-completed{
@@ -222,6 +238,10 @@ table{
     font-size:0.9rem;
 }
 
+.clear-completed:active{
+    background-color:#98efb6;
+}
+
 .clear-filter{
     width:120px;
     height:30px;
@@ -231,4 +251,8 @@ table{
     color:#FFFF;
     border:none;
     border-radius: 5px;
+}
+
+.clear-filter:active{
+    background-color:#98efb6;
 }

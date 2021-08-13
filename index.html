@@ -74,6 +74,7 @@
                         <th>Task</th>
                         <th>Edit</th>
                         <th>Category</th>
+                        <th>Date Created</th>
                         <th></th>
                     </tr>
                 </thead>   
@@ -96,7 +97,8 @@
                             />
                         </td>
                         <td class="category">{{todo.category}}</td>
-                        <td class="button">
+                        <td class="date">{{todo.date}}</td>
+                        <td class="trash-button">
                             <button class="destroy" @click="deleteTodo(todo)" style="border:none; background-color:#FFFF">
                                 <i class="far fa-trash-alt fa-2x" style="color:#F32013"></i>
                             </button>
@@ -255,7 +257,6 @@
         }
       };
 
-      // app Vue instance
       var app = new Vue({
         data: {
           todos: todoStorage.getData(),
@@ -292,6 +293,9 @@
         methods: {
             addTodo: function () {
                 var value = this.newTodo && this.newTodo.trim();
+                let today = new Date().toString()
+                let now = today.split(' ').slice(0, 4).join('-')
+
                 if (!value) {
                   return;
                 }
@@ -299,7 +303,8 @@
                   id: this.todoLength ++,
                   title: value,
                   completed: false,
-                  category: this.categoryChoice 
+                  category: this.categoryChoice ,
+                  date: now,
                 });
                 this.newTodo = "";
             },
