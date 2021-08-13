@@ -97,13 +97,21 @@
                         </td>
                         <td class="category">{{todo.category}}</td>
                         <td class="button">
-                            <button class="destroy" @click="removeTodo(todo)" style="border:none; background-color:#FFFF">
+                            <button class="destroy" @click="deleteTodo(todo)" style="border:none; background-color:#FFFF">
                                 <i class="far fa-trash-alt fa-2x" style="color:#F32013"></i>
                             </button>
                         </td>
                     </tr>
                     </tbody>     
             </table>
+
+            <div v-if="remaining % 2 == 0">
+              <p class="remaining">{{remaining}} items left in the list</p>
+            </div>
+            <div v-else>
+              <p class="remaining">{{remaining}} item left in the list</p>
+            </div>
+            
           </div>
         
       </section>
@@ -137,7 +145,7 @@
                 class="clear-completed"
                 @click="removeCompleted"
                 >
-                Clear completed
+                Clear Completed
             </button>
           </li>
         </ul>
@@ -184,26 +192,21 @@
                 </li>
                 </ul>
         </div>
-        <p>{{remaining}}</p>
-        
       </footer>
     </section>
 
     <script>
 
-      // localStorage persistence
-      var STORAGE_KEY = "todos-vuejs-2.0";
       var todoStorage = {
         getData: function () {
-          var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          var todos = JSON.parse(localStorage.getItem("TODOLIST") || "[]");
           todos.forEach(function (todo, index) {
             todo.id = index;
           });
-          todoStorage.uid = todos.length;
           return todos;
         },
         saveData: function (todos) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          localStorage.setItem("TODOLIST", JSON.stringify(todos));
         }
       };
 
@@ -211,38 +214,44 @@
       var filters = {
         all: function (todos) {
             if(app.$data.categoryFilter){
-                return todos.filter(function (todo) {
+                let allTodo =  todos.filter(function (todo) {
                     return (
                         todo.category === app.$data.categoryFilter
                     );
                 })
+                app.$data.remaining = allTodo.length;
+                return allTodo;
+                
             }else{
+                app.$data.remaining = todos.length;
                 return todos;
             }
-            
+
         },
         active: function (todos) {
-          return todos.filter(function (todo) {
+          let activeTodo =  todos.filter(function (todo) {
             if(app.$data.categoryFilter){
                 return (
                     !todo.completed && (todo.category === app.$data.categoryFilter)
                 )
             }else{
                 return  !todo.completed;
-            }
-            
+            } 
           });
+          app.$data.remaining = activeTodo.length;
+          return activeTodo;
         },
+
         completed: function (todos) {
-            app.$data.completed = !app.$data.completed
-            console.log(app.$data.completed)
-            return todos.filter(function (todo) {
+            let completedTodo =  todos.filter(function (todo) {
                 if(app.$data.categoryFilter){
                     return todo.completed && (todo.category === app.$data.categoryFilter)
                 }else{
                     return todo.completed
                 }
             });
+            app.$data.remaining = completedTodo.length;
+            return completedTodo;
         }
       };
 
@@ -250,17 +259,18 @@
       var app = new Vue({
         data: {
           todos: todoStorage.getData(),
-          categoryChoice: "", //hold redio input
+          categoryChoice: "", 
           categoryFilter: "",
           newTodo: "",
           editedTodo: null,
           beforeEdit: "",  
           visibility: "all",
           selectedIndex: "",
-          isEditing :false,
+          remaining: 0,
+          todoLength: 0
         },
 
-        // watch todos change for localStorage persistence
+
         watch: {
           todos: {
             handler: function (todos) {
@@ -283,18 +293,18 @@
             addTodo: function () {
                 var value = this.newTodo && this.newTodo.trim();
                 if (!value) {
-                return;
+                  return;
                 }
                 this.todos.push({
-                id: todoStorage.uid++,
-                title: value,
-                completed: false,
-                category: this.categoryChoice //set category
+                  id: this.todoLength ++,
+                  title: value,
+                  completed: false,
+                  category: this.categoryChoice 
                 });
                 this.newTodo = "";
             },
 
-            removeTodo: function (todo) {
+            deleteTodo: function (todo) {
                 this.todos = this.todos.filter((item) => {
                     return  item.id != todo.id
                 })
@@ -303,7 +313,6 @@
             editTodo: function (index, todo) {
                 this.todo = todo;
                 this.selectedIndex = index
-                this.isEditing = true
             },
 
             updateTodo: function (index, todo) {
@@ -319,7 +328,7 @@
                     this.categoryFilter = ""
                     element.checked = false;
                 }
-                },
+            },
 
             showAll: function(){
                 this.visibility = "all";
@@ -335,7 +344,6 @@
         },
       });
 
-      // mount
       app.$mount(".todoapp");
     </script>
   </body>
